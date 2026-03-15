@@ -196,7 +196,7 @@ Bu proje [MIT](LICENSE) lisansı altında dağıtılmaktadır.
 
 ## 👨‍💻 Geliştirici / Developer
 
-**Cemil Kaem**
+**Cemil Koca**
 - 3. Sınıf Bilgisayar Mühendisliği Öğrencisi
 - GitHub: [@ckaem](https://github.com/ckaem)
 
