@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'providers/ai_analysis_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/portfolio_screen.dart';
 import 'screens/splash_screen.dart';
+
 void main() => runApp(const BistRadarApp());
 
 class BistRadarApp extends StatelessWidget {
@@ -9,7 +12,11 @@ class BistRadarApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AiAnalysisProvider()),
+      ],
+      child: MaterialApp(
       title: 'BIST Radar',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
@@ -20,6 +27,7 @@ class BistRadarApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF1E1E2E),
       ),
       home: const SplashScreen(),
+      ),
     );
   }
 }

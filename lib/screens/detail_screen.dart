@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../models/hisse_model.dart';
+import '../widgets/ai_analysis_card.dart';
 
 class CandleData {
   final double open, high, low, close;
@@ -26,6 +27,7 @@ class _DetailScreenState extends State<DetailScreen> {
   List<double> bbLower = [];
   double? rsi;
   double? macdDeger;
+  double? macdSinyal;
   double? haftalikYuksek;
   double? haftalikDusuk;
   bool yukleniyor = true;
@@ -104,6 +106,7 @@ class _DetailScreenState extends State<DetailScreen> {
           if (closes.length >= 20) _hesaplaBollinger(closes);
           if (closes.length >= 15) rsi = _rsi(closes);
           if (closes.length >= 26) macdDeger = _macd(closes);
+          if (closes.length >= 35) macdSinyal = _macdSignalLine(closes);
           yukleniyor = false;
         });
       }
@@ -129,7 +132,9 @@ class _DetailScreenState extends State<DetailScreen> {
   double _sqrt(double x) {
     if (x <= 0) return 0;
     double r = x;
-    for (int i = 0; i < 20; i++) r = (r + x / r) / 2;
+    for (int i = 0; i < 20; i++) {
+      r = (r + x / r) / 2;
+    }
     return r;
   }
 
@@ -153,6 +158,15 @@ class _DetailScreenState extends State<DetailScreen> {
 
   double _macd(List<double> p) => _ema(p, 12) - _ema(p, 26);
 
+  double _macdSignalLine(List<double> p) {
+    // 26..end aralığındaki her nokta için MACD serisi oluştur, sonra 9-EMA al
+    final macdSeries = <double>[];
+    for (int i = 26; i <= p.length; i++) {
+      macdSeries.add(_macd(p.sublist(0, i)));
+    }
+    return _ema(macdSeries, 9);
+  }
+
   Color get _renkDegisim =>
       (widget.hisse.degisim ?? 0) >= 0 ? const Color(0xFF00D4AA) : Colors.redAccent;
 
@@ -160,12 +174,16 @@ class _DetailScreenState extends State<DetailScreen> {
   List<Map<String, dynamic>> get _sinyaller {
     List<Map<String, dynamic>> s = [];
     if (rsi != null) {
-      if (rsi! < 30) s.add({'ikon': '🟢', 'mesaj': 'RSI Aşırı Satım (${rsi!.toStringAsFixed(1)})', 'renk': const Color(0xFF00D4AA)});
-      else if (rsi! > 70) s.add({'ikon': '🔴', 'mesaj': 'RSI Aşırı Alım (${rsi!.toStringAsFixed(1)})', 'renk': Colors.redAccent});
+      if (rsi! < 30) {
+        s.add({'ikon': '🟢', 'mesaj': 'RSI Aşırı Satım (${rsi!.toStringAsFixed(1)})', 'renk': const Color(0xFF00D4AA)});
+      } else if (rsi! > 70) s.add({'ikon': '🔴', 'mesaj': 'RSI Aşırı Alım (${rsi!.toStringAsFixed(1)})', 'renk': Colors.redAccent});
     }
     if (macdDeger != null) {
-      if (macdDeger! > 0) s.add({'ikon': '⚡', 'mesaj': 'MACD Pozitif Trend', 'renk': const Color(0xFF00D4AA)});
-      else s.add({'ikon': '⚠️', 'mesaj': 'MACD Negatif Trend', 'renk': Colors.orange});
+      if (macdDeger! > 0) {
+        s.add({'ikon': '⚡', 'mesaj': 'MACD Pozitif Trend', 'renk': const Color(0xFF00D4AA)});
+      } else {
+        s.add({'ikon': '⚠️', 'mesaj': 'MACD Negatif Trend', 'renk': Colors.orange});
+      }
     }
     if (fiyatlar.isNotEmpty && bbLower.isNotEmpty) {
       final sonFiyat = fiyatlar.last;
@@ -427,6 +445,21 @@ class _DetailScreenState extends State<DetailScreen> {
           // Ortalama maliyet hesaplayıcı
           const SizedBox(height: 20),
           _ortalamaHesaplayici(),
+
+          // AI Analiz
+          if (!yukleniyor && fiyatlar.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            AiAnalysisCard(
+              symbol: widget.hisse.kod,
+              currentPrice: widget.hisse.fiyat ?? (fiyatlar.isNotEmpty ? fiyatlar.last : 0),
+              rsiValue: rsi ?? 50.0,
+              macdValue: macdDeger ?? 0.0,
+              macdSignal: macdSinyal ?? 0.0,
+              bollingerUpper: bbUpper.isNotEmpty ? bbUpper.last : (fiyatlar.last * 1.02),
+              bollingerLower: bbLower.isNotEmpty ? bbLower.last : (fiyatlar.last * 0.98),
+              changePercent: widget.hisse.degisim,
+            ),
+          ],
         ]),
       ),
     );

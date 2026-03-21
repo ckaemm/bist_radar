@@ -44,7 +44,7 @@ class _PortfolioScreenState extends State<PortfolioScreen> {
   void initState() {
     super.initState();
     fiyatGuncelle();
-    _timer = Timer.periodic(const Duration(seconds: 5), (_) => fiyatGuncelle());
+    _timer = Timer.periodic(const Duration(seconds: 2), (_) => fiyatGuncelle());
   }
 
   @override
